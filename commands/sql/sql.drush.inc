@@ -628,7 +628,14 @@ function drush_sql_get_version() {
 function sql_drush_sql_sync_sanitize($site) {
   $site_settings = drush_sitealias_get_record($site);
   $databases = sitealias_get_databases_from_record($site_settings);
-  if (drush_get_option('db-prefix') || !empty($databases['default']['default']['prefix'])) {
+  $major_version = drush_drupal_major_version();
+  if ($major_version == 8) {
+    $db_prefix = $databases['default']['default']['prefix']['default'];
+  }
+  else {
+    $db_prefix = $databases['default']['default']['prefix'];
+  }
+  if (drush_get_option('db-prefix') || !empty($db_prefix)) {
     $wrap_table_name = TRUE;
   }
   else {
@@ -640,9 +647,7 @@ function sql_drush_sql_sync_sanitize($site) {
   // Sanitize passwords.
   $newpassword = drush_get_option(array('sanitize-password', 'destination-sanitize-password'), 'password');
   if ($newpassword != 'no' && $newpassword !== 0) {
-    $major_version = drush_drupal_major_version();
     $pw_op = "";
-
     // In Drupal 6, passwords are hashed via the MD5 algorithm.
     if ($major_version == 6) {
       $pw_op = "MD5('$newpassword')";
